@@ -299,12 +299,14 @@ public class PlanetDialog extends BaseDialog implements PlanetInterfaceRenderer{
             buttons.add(sectorTop).colspan(2).fillX().row();
             addBack();
             addTech();
+            addPlanetDelete();
         }else{
             addBack();
             buttons.add().growX();
             buttons.add(sectorTop).minWidth(230f);
             buttons.add().growX();
             addTech();
+            addPlanetDelete();
         }
     }
 
@@ -315,6 +317,36 @@ public class PlanetDialog extends BaseDialog implements PlanetInterfaceRenderer{
     void addTech(){
         buttons.button("@techtree", Icon.tree, () -> ui.research.show()).size(200f, 54f).visible(() -> mode == look).pad(2).bottom();
     }
+
+    void addPlanetDelete(){
+        if(Vars.state.rules.sector != null){
+            state.planet = Vars.state.rules.sector.planet;
+            settings.put("lastplanet", state.planet.name);
+        };
+        buttons.button("@testdeleteresearch", Icon.trash, () ->
+            ui.showConfirm("@confirm", "@settings.clearresearch.confirm", () -> {
+                universe.clearLoadoutInfo();
+                for(TechNode node : TechTree.all){
+                    if(node.planet == state.planet) {
+                        node.reset();
+                    }
+                    
+                    // TODO limit to the planet
+                }
+                content.each(c -> {
+                    if(c instanceof UnlockableContent u){
+                        if(u.shownPlanets.contains(state.planet) || (u.techNode != null && u.techNode.planet == state.planet)){
+                            u.clearUnlock();
+                            System.out.println("La valeur est : " + u.localizedName);
+                        }  
+                        // TODO limit to the planet
+                    }
+                });
+                settings.remove("unlocks");
+            })
+        ).size(200f, 54f).visible(() -> mode == look).pad(2).bottom();
+    }
+
 
     public void showOverview(){
         //TODO implement later if necessary
